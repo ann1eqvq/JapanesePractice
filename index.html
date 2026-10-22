@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>日文動詞變化</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Chart.js 用於繪製圓餅圖 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background-color: #F8F9FA;
@@ -53,79 +55,133 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
 
-  <!-- 主練習卡片 -->
-  <div id="mainPracticeCard" class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-6 transition-all duration-300">
-    <div class="flex justify-between items-center mb-6">
-      <div class="flex items-center gap-2">
-        <h1 class="text-xl font-bold text-gray-800">日文動詞變化</h1>
-        <span id="reviewModeBadge" class="hidden text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">錯題專練中</span>
-      </div>
-      <div class="text-sm text-gray-500">
-        答對數：<span id="score" class="font-bold text-brand">0</span>
-      </div>
-    </div>
-
-    <!-- 題目單字卡 -->
-    <div id="wordDisplayCard" class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100 transition-all duration-200">
-      <div id="wordDisplay" class="text-3xl font-extrabold text-gray-800 mb-1">食べる</div>
-      <div id="readingDisplay" class="text-sm text-gray-500 mb-1">たべる</div>
-      <div id="meaningDisplay" class="text-xs text-gray-400">吃</div>
-    </div>
-
-    <!-- 步驟 1：選擇類別 -->
-    <div id="stepGroup" class="mb-4">
-      <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（快捷鍵 1 / 2 / 3）</p>
-      <div class="grid grid-cols-3 gap-3">
-        <button onclick="handleGroupSelect(1)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">1類動詞 (1)</button>
-        <button onclick="handleGroupSelect(2)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">2類動詞 (2)</button>
-        <button onclick="handleGroupSelect(3)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">3類動詞 (3)</button>
-      </div>
-    </div>
-
-    <!-- 步驟 2：輸入指定形態 -->
-    <div id="stepConjugation" class="hidden mb-4">
-      <p class="text-sm font-medium text-gray-700 mb-2">
-        步驟 2：請輸入該動詞的 <span id="targetFormLabel" class="font-bold text-brand">可能形</span>
-      </p>
-      <form onsubmit="handleConjugationSubmit(event)" class="flex gap-2">
-        <input 
-          id="conjugationInput" 
-          type="text" 
-          placeholder="支援漢字或平假名輸入" 
-          class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-sm"
-          autocomplete="off"
-        >
-        <button type="submit" class="custom-primary text-white px-5 py-2.5 rounded-xl text-sm font-medium transition">送出</button>
-      </form>
-    </div>
-
-    <!-- 醒目反饋橫幅 -->
-    <div id="feedbackBox" class="hidden rounded-xl p-3 mb-4 text-center text-sm font-semibold transition-all"></div>
-
-    <button id="nextBtn" onclick="nextQuestion()" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition">
-      下一題 (Enter)
+  <!-- 頂部頁籤切換導航 -->
+  <div class="w-full max-w-xl flex justify-center gap-3 mb-6">
+    <button id="tabPracticeBtn" onclick="switchTab('practice')" class="custom-primary text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition">
+      練習模式
+    </button>
+    <button id="tabAnalyticsBtn" onclick="switchTab('analytics')" class="bg-white text-gray-600 border border-gray-200 hover:border-brand px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition">
+      錯題分析報告
     </button>
   </div>
 
-  <!-- 錯題記錄卡 -->
-  <div class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-    <div class="flex justify-between items-center mb-4">
-      <div class="flex items-center gap-2">
-        <h2 class="text-base font-bold text-gray-800">錯題記錄清單</h2>
-        <span id="mistakeCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">0 題</span>
+  <!-- ==================== 視圖 1：練習頁面 ==================== -->
+  <div id="viewPractice" class="w-full max-w-xl flex flex-col items-center">
+    
+    <!-- 主練習卡片 -->
+    <div id="mainPracticeCard" class="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-6 transition-all duration-300">
+      <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-bold text-gray-800">日文動詞變化</h1>
+          <span id="reviewModeBadge" class="hidden text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">錯題專練中</span>
+        </div>
+        <div class="text-sm text-gray-500">
+          答對數：<span id="score" class="font-bold text-brand">0</span>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button id="retryMistakesBtn" onclick="toggleMistakeMode()" class="text-xs px-3 py-1 rounded-lg border border-brand text-brand hover:bg-gray-50 transition hidden">
-          只練錯題
+
+      <!-- 題目單字卡 -->
+      <div id="wordDisplayCard" class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100 transition-all duration-200">
+        <div id="wordDisplay" class="text-3xl font-extrabold text-gray-800 mb-1">食べる</div>
+        <div id="readingDisplay" class="text-sm text-gray-500 mb-1">たべる</div>
+        <div id="meaningDisplay" class="text-xs text-gray-400">吃</div>
+      </div>
+
+      <!-- 步驟 1：選擇類別 -->
+      <div id="stepGroup" class="mb-4">
+        <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（快捷鍵 1 / 2 / 3）</p>
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="handleGroupSelect(1)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">1類動詞 (1)</button>
+          <button onclick="handleGroupSelect(2)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">2類動詞 (2)</button>
+          <button onclick="handleGroupSelect(3)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">3類動詞 (3)</button>
+        </div>
+      </div>
+
+      <!-- 步驟 2：輸入指定形態 -->
+      <div id="stepConjugation" class="hidden mb-4">
+        <p class="text-sm font-medium text-gray-700 mb-2">
+          步驟 2：請輸入該動詞的 <span id="targetFormLabel" class="font-bold text-brand">可能形</span>
+        </p>
+        <form onsubmit="handleConjugationSubmit(event)" class="flex gap-2">
+          <input 
+            id="conjugationInput" 
+            type="text" 
+            placeholder="支援漢字或平假名輸入" 
+            class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-sm"
+            autocomplete="off"
+          >
+          <button type="submit" class="custom-primary text-white px-5 py-2.5 rounded-xl text-sm font-medium transition">送出</button>
+        </form>
+      </div>
+
+      <!-- 醒目反饋橫幅 -->
+      <div id="feedbackBox" class="hidden rounded-xl p-3 mb-4 text-center text-sm font-semibold transition-all"></div>
+
+      <button id="nextBtn" onclick="nextQuestion()" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition">
+        下一題 (Enter)
+      </button>
+    </div>
+
+    <!-- 錯題記錄卡 -->
+    <div class="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-gray-800">錯題記錄清單</h2>
+          <span id="mistakeCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">0 題</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="retryMistakesBtn" onclick="toggleMistakeMode()" class="text-xs px-3 py-1 rounded-lg border border-brand text-brand hover:bg-gray-50 transition hidden">
+            只練錯題
+          </button>
+          <button onclick="clearMistakes()" class="text-xs text-gray-400 hover:text-rose-500 transition">
+            清空紀錄
+          </button>
+        </div>
+      </div>
+
+      <!-- 匯入 / 匯出資料列 -->
+      <div class="flex gap-2 mb-4 pt-2 border-t border-gray-100">
+        <button onclick="exportMistakes()" class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:border-brand text-gray-600 transition flex items-center gap-1">
+          📥 匯出錯題備份
         </button>
-        <button onclick="clearMistakes()" class="text-xs text-gray-400 hover:text-rose-500 transition">
-          清空所有紀錄
+        <button onclick="triggerImport()" class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:border-brand text-gray-600 transition flex items-center gap-1">
+          📤 匯入錯題備份
         </button>
+        <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="handleFileImport(event)">
+      </div>
+
+      <div id="mistakeList" class="space-y-3 text-sm">
+        <div id="emptyNote" class="text-center text-gray-400 py-6">目前尚無答錯題目，繼續保持！</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 視圖 2：錯題分析報告頁面 ==================== -->
+  <div id="viewAnalytics" class="hidden w-full max-w-xl flex flex-col items-center">
+    
+    <!-- 圓餅圖統計卡片 -->
+    <div class="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h2 class="text-base font-bold text-gray-800 mb-1">錯誤動詞類型分佈</h2>
+      <p class="text-xs text-gray-400 mb-4">統計各類動詞（含 KA 變、SA 變）發生錯誤的佔比</p>
+      
+      <div id="chartContainer" class="w-full flex justify-center items-center py-2" style="max-height: 260px;">
+        <canvas id="typePieChart"></canvas>
+      </div>
+      <div id="noChartData" class="hidden text-center text-gray-400 py-8 text-sm">
+        暫無足夠的錯誤數據生成圖表
       </div>
     </div>
 
-    <div id="mistakeList" class="space-y-3 text-sm">
-      <div id="emptyNote" class="text-center text-gray-400 py-6">目前尚無答錯題目，繼續保持！</div>
+    <!-- 辭書形單字深度分析清單 -->
+    <div class="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-base font-bold text-gray-800">單字錯誤深度分析</h2>
+        <span id="analyzedWordsCount" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">0 個單字</span>
+      </div>
+
+      <div id="analyticsDetailsList" class="space-y-4">
+        <!-- 動態渲染每個單字的錯誤歷史與次數 -->
+      </div>
     </div>
   </div>
 
@@ -133,7 +189,7 @@
     const verbs = [
       // ====== 筆記特例：一類動詞（外觀像二類，實為一類） ======
       {
-        word: "要る", reading: "いる", meaning: "需要", group: 1, isException: true,
+        word: "要る", reading: "いる", meaning: "需要", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["要れる", "いれる"],
           "て形": ["要って", "いって"],
@@ -143,7 +199,7 @@
         }
       },
       {
-        word: "炒る", reading: "いる", meaning: "炒、煎", group: 1, isException: true,
+        word: "炒る", reading: "いる", meaning: "炒、煎", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["炒れる", "いれる"],
           "て形": ["炒って", "いって"],
@@ -153,7 +209,7 @@
         }
       },
       {
-        word: "入る", reading: "はいる", meaning: "進入", group: 1, isException: true,
+        word: "入る", reading: "はいる", meaning: "進入", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["入れる", "はいれる"],
           "て形": ["入って", "はいって"],
@@ -163,7 +219,7 @@
         }
       },
       {
-        word: "切る", reading: "きる", meaning: "剪、切", group: 1, isException: true,
+        word: "切る", reading: "きる", meaning: "剪、切", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["切れる", "きれる"],
           "て形": ["切って", "きって"],
@@ -173,7 +229,7 @@
         }
       },
       {
-        word: "知る", reading: "しる", meaning: "知道", group: 1, isException: true,
+        word: "知る", reading: "しる", meaning: "知道", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["知れる", "しれる"],
           "て形": ["知って", "しって"],
@@ -183,7 +239,7 @@
         }
       },
       {
-        word: "走る", reading: "はしる", meaning: "跑", group: 1, isException: true,
+        word: "走る", reading: "はしる", meaning: "跑", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["走れる", "はしれる"],
           "て形": ["走って", "はしって"],
@@ -193,7 +249,7 @@
         }
       },
       {
-        word: "帰る", reading: "かえる", meaning: "回家", group: 1, isException: true,
+        word: "帰る", reading: "かえる", meaning: "回家", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["帰れる", "かえれる"],
           "て形": ["帰って", "かえって"],
@@ -203,7 +259,7 @@
         }
       },
       {
-        word: "照る", reading: "てる", meaning: "照耀", group: 1, isException: true,
+        word: "照る", reading: "てる", meaning: "照耀", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["照れる", "てれる"],
           "て形": ["照って", "てって"],
@@ -213,7 +269,7 @@
         }
       },
       {
-        word: "喋る", reading: "しゃべる", meaning: "聊天、說話", group: 1, isException: true,
+        word: "喋る", reading: "しゃべる", meaning: "聊天、說話", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["喋れる", "しゃべれる"],
           "て形": ["喋って", "しゃべって"],
@@ -223,7 +279,7 @@
         }
       },
       {
-        word: "散る", reading: "ちる", meaning: "凋謝、散落", group: 1, isException: true,
+        word: "散る", reading: "ちる", meaning: "凋謝、散落", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["散れる", "ちれる"],
           "て形": ["散って", "ちって"],
@@ -233,17 +289,17 @@
         }
       },
       {
-        word: "経る", reading: "へる", meaning: "經歷、度過", group: 1, isException: true,
+        word: "経る", reading: "へる", meaning: "經歷、度過", group: 1, subType: "1類動詞", isException: true,
         forms: {
-          "可能形": ["経れる", "へれる"],
-          "て形": ["経って", "へって"],
-          "ない形": ["経らない", "へらない"],
-          "た形": ["経った", "へった"],
+          "可能形": ["經れる", "へれる"],
+          "て形": ["經って", "へって"],
+          "ない形": ["經らない", "へらない"],
+          "た形": ["經った", "へった"],
           "意向形": ["經ろう", "へろう"]
         }
       },
       {
-        word: "減る", reading: "へる", meaning: "減少", group: 1, isException: true,
+        word: "減る", reading: "へる", meaning: "減少", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["減れる", "へれる"],
           "て形": ["減って", "へって"],
@@ -255,7 +311,7 @@
 
       // ====== 常規一類動詞（五段） ======
       {
-        word: "書く", reading: "かく", meaning: "寫", group: 1,
+        word: "書く", reading: "かく", meaning: "寫", group: 1, subType: "1類動詞",
         forms: {
           "可能形": ["書ける", "かける"],
           "て形": ["書いて", "かいて"],
@@ -265,7 +321,7 @@
         }
       },
       {
-        word: "行く", reading: "いく", meaning: "去", group: 1,
+        word: "行く", reading: "いく", meaning: "去", group: 1, subType: "1類動詞",
         forms: {
           "可能形": ["行ける", "いける"],
           "て形": ["行って", "いって"],
@@ -275,7 +331,7 @@
         }
       },
       {
-        word: "飲む", reading: "のむ", meaning: "喝", group: 1,
+        word: "飲む", reading: "のむ", meaning: "喝", group: 1, subType: "1類動詞",
         forms: {
           "可能形": ["飲める", "のめる"],
           "て形": ["飲んで", "のんで"],
@@ -285,7 +341,7 @@
         }
       },
       {
-        word: "話す", reading: "はなす", meaning: "說話", group: 1,
+        word: "話す", reading: "はなす", meaning: "說話", group: 1, subType: "1類動詞",
         forms: {
           "可能形": ["話せる", "はなせる"],
           "て形": ["話して", "はなして"],
@@ -295,7 +351,7 @@
         }
       },
       {
-        word: "待つ", reading: "まつ", meaning: "等待", group: 1,
+        word: "待つ", reading: "まつ", meaning: "等待", group: 1, subType: "1類動詞",
         forms: {
           "可能形": ["待てる", "まてる"],
           "て形": ["待って", "まって"],
@@ -305,7 +361,7 @@
         }
       },
       {
-        word: "買う", reading: "かう", meaning: "買", group: 1,
+        word: "買う", reading: "かう", meaning: "買", group: 1, subType: "1類動詞",
         forms: {
           "可能形": ["買える", "かえる"],
           "て形": ["買って", "かって"],
@@ -317,7 +373,7 @@
 
       // ====== 二類動詞（一段） ======
       {
-        word: "食べる", reading: "たべる", meaning: "吃", group: 2,
+        word: "食べる", reading: "たべる", meaning: "吃", group: 2, subType: "2類動詞",
         forms: {
           "可能形": ["食べられる", "たべられる", "食べれる", "たべれる"],
           "て形": ["食べて", "たべて"],
@@ -327,7 +383,7 @@
         }
       },
       {
-        word: "見る", reading: "みる", meaning: "看", group: 2,
+        word: "見る", reading: "みる", meaning: "看", group: 2, subType: "2類動詞",
         forms: {
           "可能形": ["見られる", "みられる", "見れる", "みれる"],
           "て形": ["見て", "みて"],
@@ -337,7 +393,7 @@
         }
       },
       {
-        word: "起きる", reading: "おきる", meaning: "起床", group: 2,
+        word: "起きる", reading: "おきる", meaning: "起床", group: 2, subType: "2類動詞",
         forms: {
           "可能形": ["起きられる", "おきられる", "起きれる", "おきれる"],
           "て形": ["起きて", "おきて"],
@@ -347,17 +403,17 @@
         }
       },
       {
-        word: "寝る", reading: "ねる", meaning: "睡覺", group: 2,
+        word: "寝る", reading: "ねる", meaning: "睡覺", group: 2, subType: "2類動詞",
         forms: {
           "可能形": ["寝られる", "ねられる", "寝れる", "ねれる"],
           "て形": ["寝て", "ねて"],
           "ない形": ["寝ない", "ねない"],
-          "た形": ["寢た", "ねた"],
+          "た形": ["寝た", "ねた"],
           "意向形": ["寢よう", "ねよう"]
         }
       },
       {
-        word: "教える", reading: "おしえる", meaning: "教導", group: 2,
+        word: "教える", reading: "おしえる", meaning: "教導", group: 2, subType: "2類動詞",
         forms: {
           "可能形": ["教えられる", "おしえられる", "教えれる", "おしえれる"],
           "て形": ["教えて", "おしえて"],
@@ -369,7 +425,7 @@
 
       // ====== 三類動詞（變格） ======
       {
-        word: "する", reading: "する", meaning: "做（サ變）", group: 3,
+        word: "する", reading: "する", meaning: "做（サ變）", group: 3, subType: "SA變",
         forms: {
           "可能形": ["できる"],
           "て形": ["して"],
@@ -379,7 +435,7 @@
         }
       },
       {
-        word: "来る", reading: "くる", meaning: "來（カ變）", group: 3,
+        word: "来る", reading: "くる", meaning: "來（カ變）", group: 3, subType: "KA變",
         forms: {
           "可能形": ["こられる", "来られる", "これる", "来れる"],
           "て形": ["きて", "来て"],
@@ -397,12 +453,33 @@
     let score = 0;
     let isMistakeMode = false;
     let mistakes = [];
+    let myChart = null;
 
     function initApp() {
       loadMistakes();
       renderMistakes();
       nextQuestion();
       setupKeyboard();
+    }
+
+    function switchTab(tab) {
+      const viewPractice = document.getElementById("viewPractice");
+      const viewAnalytics = document.getElementById("viewAnalytics");
+      const tabPracticeBtn = document.getElementById("tabPracticeBtn");
+      const tabAnalyticsBtn = document.getElementById("tabAnalyticsBtn");
+
+      if (tab === "practice") {
+        viewPractice.classList.remove("hidden");
+        viewAnalytics.classList.add("hidden");
+        tabPracticeBtn.className = "custom-primary text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition";
+        tabAnalyticsBtn.className = "bg-white text-gray-600 border border-gray-200 hover:border-brand px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition";
+      } else {
+        viewPractice.classList.add("hidden");
+        viewAnalytics.classList.remove("hidden");
+        tabAnalyticsBtn.className = "custom-primary text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition";
+        tabPracticeBtn.className = "bg-white text-gray-600 border border-gray-200 hover:border-brand px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition";
+        renderAnalytics();
+      }
     }
 
     function loadMistakes() {
@@ -491,7 +568,6 @@
         document.getElementById("stepConjugation").classList.remove("hidden");
         document.getElementById("conjugationInput").focus();
       } else {
-        // 如果是例外一類動詞答錯，記錄錯題後依然進入步驟 2 輸入變形
         if (currentVerb.isException) {
           showFeedback(false, "分類錯誤！💡 這是「例外1類動詞」（外觀看似2類，實為1類）。請依照五段規則繼續輸入變形！");
           recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 1 類動詞（例外1類）`, targetForm);
@@ -499,7 +575,6 @@
           document.getElementById("stepConjugation").classList.remove("hidden");
           document.getElementById("conjugationInput").focus();
         } else {
-          // 常規動詞答錯才直接結束該題
           showFeedback(false, `分類錯誤！這是 ${currentVerb.group} 類動詞。已記錄到錯題本！`);
           recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 ${currentVerb.group} 類動詞`, targetForm);
           document.getElementById("nextBtn").classList.remove("hidden");
@@ -540,16 +615,19 @@
     }
 
     function recordMistake(type, userAns, correctAns, formKey) {
-      mistakes = mistakes.filter(m => !(m.word === currentVerb.word && m.type === type));
-
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
       mistakes.unshift({
         id: Date.now(),
         word: currentVerb.word,
         reading: currentVerb.reading,
+        group: currentVerb.group,
+        subType: currentVerb.subType,
         type: type,
         formKey: formKey,
         userAns: userAns,
-        correctAns: correctAns
+        correctAns: correctAns,
+        timestamp: now
       });
 
       saveMistakes();
@@ -606,6 +684,9 @@
         saveMistakes();
         renderMistakes();
         if (isMistakeMode) toggleMistakeMode();
+        if (!document.getElementById("viewAnalytics").classList.contains("hidden")) {
+          renderAnalytics();
+        }
       }
     }
 
@@ -630,8 +711,230 @@
       nextQuestion();
     }
 
+    // ==================== 匯出與匯入功能 ====================
+    function exportMistakes() {
+      if (mistakes.length === 0) {
+        alert("目前沒有錯題紀錄可以匯出！");
+        return;
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mistakes, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `jp_verb_mistakes_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function triggerImport() {
+      document.getElementById("importFileInput").click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (Array.isArray(importedData)) {
+            // 合併現有與匯入的錯題（依 id 去重）
+            const existingIds = new Set(mistakes.map(m => m.id));
+            const newItems = importedData.filter(m => !existingIds.has(m.id));
+            mistakes = [...newItems, ...mistakes];
+            saveMistakes();
+            renderMistakes();
+            alert(`成功匯入 ${newItems.length} 筆錯題紀錄！`);
+          } else {
+            alert("匯入的檔案格式不正確！");
+          }
+        } catch (err) {
+          alert("讀取檔案失敗，請確認檔案格式是否正確。");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    // ==================== 錯題深度分析邏輯 ====================
+    function renderAnalytics() {
+      const container = document.getElementById("analyticsDetailsList");
+      const countBadge = document.getElementById("analyzedWordsCount");
+      const noChart = document.getElementById("noChartData");
+      const chartCanvas = document.getElementById("typePieChart");
+
+      if (mistakes.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">目前尚無任何錯題數據可供分析。</div>`;
+        countBadge.textContent = "0 個單字";
+        noChart.classList.remove("hidden");
+        chartCanvas.classList.add("hidden");
+        if (myChart) { myChart.destroy(); myChart = null; }
+        return;
+      }
+
+      noChart.classList.add("hidden");
+      chartCanvas.classList.remove("hidden");
+
+      // 1. 動詞類型統計（圓餅圖）
+      const typeCounts = { "1類動詞": 0, "2類動詞": 0, "KA變": 0, "SA變": 0 };
+      
+      // 2. 單字維度分組統計
+      const wordStats = {};
+
+      mistakes.forEach(m => {
+        // 類型統計
+        const subType = m.subType || (m.group === 1 ? "1類動詞" : (m.group === 2 ? "2類動詞" : "SA變"));
+        if (typeCounts[subType] !== undefined) {
+          typeCounts[subType]++;
+        } else {
+          typeCounts[subType] = 1;
+        }
+
+        // 單字維度聚合
+        if (!wordStats[m.word]) {
+          wordStats[m.word] = {
+            word: m.word,
+            reading: m.reading,
+            groupMistakes: 0,
+            formMistakes: {},
+            history: []
+          };
+        }
+
+        if (m.type === "分類錯誤") {
+          wordStats[m.word].groupMistakes++;
+        } else {
+          const formName = m.formKey || "其他變形";
+          wordStats[m.word].formMistakes[formName] = (wordStats[m.word].formMistakes[formName] || 0) + 1;
+        }
+
+        wordStats[m.word].history.push({
+          type: m.type,
+          userAns: m.userAns,
+          correctAns: m.correctAns,
+          timestamp: m.timestamp || "近期"
+        });
+      });
+
+      // 繪製圓餅圖
+      drawPieChart(typeCounts);
+
+      // 渲染單字深度分析卡片
+      const wordList = Object.values(wordStats);
+      countBadge.textContent = `${wordList.length} 個單字`;
+
+      container.innerHTML = wordList.map(item => {
+        // 組合變形錯誤次數標籤
+        const formMistakeKeys = Object.keys(item.formMistakes);
+        const formTags = formMistakeKeys.length > 0 
+          ? formMistakeKeys.map(k => `<span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-xs">${k}: ${item.formMistakes[k]}次</span>`).join(" ")
+          : `<span class="text-gray-400 text-xs">無變形錯誤</span>`;
+
+        // 歷史錯誤答案清單
+        const historyRows = item.history.map(h => `
+          <div class="flex justify-between items-center text-xs py-1 border-b border-gray-100 last:border-0">
+            <span class="text-gray-600">${h.type}</span>
+            <div class="flex items-center gap-2">
+              <span class="line-through text-rose-500">${h.userAns}</span>
+              <span class="text-gray-300">➔</span>
+              <span class="text-emerald-600 font-medium">${h.correctAns}</span>
+            </div>
+          </div>
+        `).join("");
+
+        return `
+          <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="text-lg font-bold text-gray-800">${item.word}</span>
+                <span class="text-xs text-gray-400 ml-1">(${item.reading})</span>
+              </div>
+              <div class="text-xs">
+                分類錯誤：<span class="font-bold text-rose-600">${item.groupMistakes} 次</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="text-xs text-gray-500 mb-1">各變形錯誤統計：</div>
+              <div class="flex flex-wrap gap-1.5">
+                ${formTags}
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-3 border border-gray-100">
+              <div class="text-xs font-semibold text-gray-500 mb-1.5">錯的答案歷史記錄：</div>
+              <div class="flex flex-col">
+                ${historyRows}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function drawPieChart(typeCounts) {
+      const ctx = document.getElementById("typePieChart").getContext("2d");
+      const labels = ["1類動詞", "2類動詞", "KA變", "SA變"];
+      const dataValues = [
+        typeCounts["1類動詞"] || 0,
+        typeCounts["2類動詞"] || 0,
+        typeCounts["KA變"] || 0,
+        typeCounts["SA變"] || 0
+      ];
+
+      const total = dataValues.reduce((a, b) => a + b, 0);
+
+      if (myChart) {
+        myChart.destroy();
+      }
+
+      myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: [
+              '#47607D', // 1類動詞
+              '#889BB0', // 2類動詞
+              '#D97706', // KA變
+              '#059669'  // SA變
+            ],
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw;
+                  const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                  return ` ${context.label}: ${val}次 (${pct}%)`;
+                }
+              }
+            },
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: { size: 12 }
+              }
+            }
+          }
+        }
+      });
+    }
+
     function setupKeyboard() {
       window.addEventListener("keydown", (e) => {
+        // 僅在練習分頁時啟用鍵盤快捷鍵
+        if (!document.getElementById("viewAnalytics").classList.contains("hidden")) return;
+
         const stepGroup = document.getElementById("stepGroup");
         const nextBtn = document.getElementById("nextBtn");
 
