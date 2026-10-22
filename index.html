@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <!-- 題目單字卡（純粹顯示單字、讀音與中文意思，不提前劇透類別） -->
+    <!-- 題目單字卡 -->
     <div id="wordDisplayCard" class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100 transition-all duration-200">
       <div id="wordDisplay" class="text-3xl font-extrabold text-gray-800 mb-1">食べる</div>
       <div id="readingDisplay" class="text-sm text-gray-500 mb-1">たべる</div>
@@ -99,7 +99,7 @@
       </form>
     </div>
 
-    <!-- 醒目反饋橫幅（答題後於此提示例外資訊） -->
+    <!-- 醒目反饋橫幅 -->
     <div id="feedbackBox" class="hidden rounded-xl p-3 mb-4 text-center text-sm font-semibold transition-all"></div>
 
     <button id="nextBtn" onclick="nextQuestion()" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition">
@@ -189,7 +189,7 @@
           "て形": ["走って", "はしって"],
           "ない形": ["走らない", "はしらない"],
           "た形": ["走った", "はしった"],
-          "意向形": ["走ろう", "​はしろう"]
+          "意向形": ["走ろう", "はしろう"]
         }
       },
       {
@@ -238,7 +238,7 @@
           "可能形": ["経れる", "へれる"],
           "て形": ["経って", "へって"],
           "ない形": ["経らない", "へらない"],
-          "た形": ["經った", "へった"],
+          "た形": ["経った", "へった"],
           "意向形": ["經ろう", "へろう"]
         }
       },
@@ -352,7 +352,7 @@
           "可能形": ["寝られる", "ねられる", "寝れる", "ねれる"],
           "て形": ["寝て", "ねて"],
           "ない形": ["寝ない", "ねない"],
-          "た形": ["寝た", "ねた"],
+          "た形": ["寢た", "ねた"],
           "意向形": ["寢よう", "ねよう"]
         }
       },
@@ -482,7 +482,6 @@
 
     function handleGroupSelect(selectedGroup) {
       if (selectedGroup === currentVerb.group) {
-        // 答完後才提示是否為例外1類
         if (currentVerb.isException) {
           showFeedback(true, "分類正確！💡 此單字為「例外1類動詞」（看似2類、實為1類），請接著輸入變形。");
         } else {
@@ -492,16 +491,20 @@
         document.getElementById("stepConjugation").classList.remove("hidden");
         document.getElementById("conjugationInput").focus();
       } else {
-        // 答錯後給予明確解析提示
+        // 如果是例外一類動詞答錯，記錄錯題後依然進入步驟 2 輸入變形
         if (currentVerb.isException) {
-          showFeedback(false, "分類錯誤！💡 這是「例外1類動詞」（外觀看似2類，實為1類），已記錄到錯題本！");
+          showFeedback(false, "分類錯誤！💡 這是「例外1類動詞」（外觀看似2類，實為1類）。請依照五段規則繼續輸入變形！");
           recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 1 類動詞（例外1類）`, targetForm);
+          document.getElementById("stepGroup").classList.add("hidden");
+          document.getElementById("stepConjugation").classList.remove("hidden");
+          document.getElementById("conjugationInput").focus();
         } else {
+          // 常規動詞答錯才直接結束該題
           showFeedback(false, `分類錯誤！這是 ${currentVerb.group} 類動詞。已記錄到錯題本！`);
           recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 ${currentVerb.group} 類動詞`, targetForm);
+          document.getElementById("nextBtn").classList.remove("hidden");
+          document.getElementById("nextBtn").focus();
         }
-        document.getElementById("nextBtn").classList.remove("hidden");
-        document.getElementById("nextBtn").focus();
       }
     }
 
