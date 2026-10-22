@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日文動詞變化</title>
+  <title>日文動詞變化特訓</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -57,7 +57,7 @@
   <div id="mainPracticeCard" class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-6 transition-all duration-300">
     <div class="flex justify-between items-center mb-6">
       <div class="flex items-center gap-2">
-        <h1 class="text-xl font-bold text-gray-800">日文動詞變化</h1>
+        <h1 class="text-xl font-bold text-gray-800">日文動詞變化特訓</h1>
         <span id="reviewModeBadge" class="hidden text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">錯題專練中</span>
       </div>
       <div class="text-sm text-gray-500">
@@ -74,7 +74,7 @@
 
     <!-- 步驟 1：選擇類別 -->
     <div id="stepGroup" class="mb-4">
-      <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（可按快捷鍵 1 / 2 / 3）</p>
+      <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（快捷鍵 1 / 2 / 3）</p>
       <div class="grid grid-cols-3 gap-3">
         <button onclick="handleGroupSelect(1)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">1類動詞 (1)</button>
         <button onclick="handleGroupSelect(2)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">2類動詞 (2)</button>
@@ -91,7 +91,7 @@
         <input 
           id="conjugationInput" 
           type="text" 
-          placeholder="支援漢字或平假名（例：食べられる / たべられる）" 
+          placeholder="支援漢字或平假名輸入" 
           class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-sm"
           autocomplete="off"
         >
@@ -119,7 +119,7 @@
           只練錯題
         </button>
         <button onclick="clearMistakes()" class="text-xs text-gray-400 hover:text-rose-500 transition">
-          清空本機紀錄
+          清空所有紀錄
         </button>
       </div>
     </div>
@@ -130,9 +130,130 @@
   </div>
 
   <script>
-    // 擴充題庫：涵蓋一類五段、特殊音便、例外五段、二類一段及三類變格動詞
     const verbs = [
-      // 一類動詞（五段）
+      // ====== 筆記特例：一類動詞（外觀像二類，實為一類） ======
+      {
+        word: "要る", reading: "いる", meaning: "需要（例外1類）", group: 1,
+        forms: {
+          "可能形": ["要れる", "いれる"],
+          "て形": ["要って", "いって"],
+          "ない形": ["要らない", "いらない"],
+          "た形": ["要った", "いった"],
+          "意向形": ["要ろう", "いろう"]
+        }
+      },
+      {
+        word: "炒る", reading: "いる", meaning: "炒、煎（例外1類）", group: 1,
+        forms: {
+          "可能形": ["炒れる", "いれる"],
+          "て形": ["炒って", "いって"],
+          "ない形": ["炒らない", "いらない"],
+          "た形": ["炒った", "いった"],
+          "意向形": ["炒ろう", "いろう"]
+        }
+      },
+      {
+        word: "入る", reading: "はいる", meaning: "進入（例外1類）", group: 1,
+        forms: {
+          "可能形": ["入れる", "はいれる"],
+          "て形": ["入って", "はいって"],
+          "ない形": ["入らない", "はいらない"],
+          "た形": ["入った", "はいった"],
+          "意向形": ["入ろう", "はいろう"]
+        }
+      },
+      {
+        word: "切る", reading: "きる", meaning: "剪、切（例外1類）", group: 1,
+        forms: {
+          "可能形": ["切れる", "きれる"],
+          "て形": ["切って", "きって"],
+          "ない形": ["切らない", "きらない"],
+          "た形": ["切った", "かった"],
+          "意向形": ["切ろう", "きろう"]
+        }
+      },
+      {
+        word: "知る", reading: "しる", meaning: "知道（例外1類）", group: 1,
+        forms: {
+          "可能形": ["知れる", "しれる"],
+          "て形": ["知って", "しって"],
+          "ない形": ["知らない", "しらない"],
+          "た形": ["知った", "しった"],
+          "意向形": ["知ろう", "しろう"]
+        }
+      },
+      {
+        word: "走る", reading: "はしる", meaning: "跑（例外1類）", group: 1,
+        forms: {
+          "可能形": ["走れる", "はしれる"],
+          "て形": ["走って", "はしって"],
+          "ない形": ["走らない", "はしらない"],
+          "た形": ["走った", "はしった"],
+          "意向形": ["走ろう", "はしろう"]
+        }
+      },
+      {
+        word: "帰る", reading: "かえる", meaning: "回家（例外1類）", group: 1,
+        forms: {
+          "可能形": ["帰れる", "かえれる"],
+          "て形": ["帰って", "かえって"],
+          "ない形": ["帰らない", "かえらない"],
+          "た形": ["帰った", "かえった"],
+          "意向形": ["帰ろう", "かえろう"]
+        }
+      },
+      {
+        word: "照る", reading: "てる", meaning: "照耀（例外1類）", group: 1,
+        forms: {
+          "可能形": ["照れる", "てれる"],
+          "て形": ["照って", "てって"],
+          "ない形": ["照らない", "てらない"],
+          "た形": ["照った", "てった"],
+          "意向形": ["照ろう", "てろう"]
+        }
+      },
+      {
+        word: "喋る", reading: "しゃべる", meaning: "聊天、喋喋不休（例外1類）", group: 1,
+        forms: {
+          "可能形": ["喋れる", "しゃべれる"],
+          "て形": ["喋って", "しゃべって"],
+          "ない形": ["喋らない", "しゃべらない"],
+          "た形": ["喋った", "しゃべった"],
+          "意向形": ["喋ろう", "しゃべろう"]
+        }
+      },
+      {
+        word: "散る", reading: "ちる", meaning: "凋謝、散落（例外1類）", group: 1,
+        forms: {
+          "可能形": ["散れる", "ちれる"],
+          "て形": ["散って", "ちって"],
+          "ない形": ["散らない", "ちらない"],
+          "た形": ["散った", "ちった"],
+          "意向形": ["散ろう", "ちろう"]
+        }
+      },
+      {
+        word: "経る", reading: "へる", meaning: "經歷、度過（例外1類）", group: 1,
+        forms: {
+          "可能形": ["経れる", "へれる"],
+          "て形": ["経って", "へって"],
+          "ない形": ["経らない", "へらない"],
+          "た形": ["経った", "へった"],
+          "意向形": ["経ろう", "へろう"]
+        }
+      },
+      {
+        word: "減る", reading: "へる", meaning: "減少（例外1類）", group: 1,
+        forms: {
+          "可能形": ["減れる", "へれる"],
+          "て形": ["減って", "へって"],
+          "ない形": ["減らない", "へらない"],
+          "た形": ["減った", "へった"],
+          "意向形": ["減ろう", "へろう"]
+        }
+      },
+
+      // ====== 常規一類動詞（五段） ======
       {
         word: "書く", reading: "かく", meaning: "寫", group: 1,
         forms: {
@@ -144,7 +265,7 @@
         }
       },
       {
-        word: "行く", reading: "いく", meaning: "去（促音便特殊變化）", group: 1,
+        word: "行く", reading: "いく", meaning: "去（促音便特例）", group: 1,
         forms: {
           "可能形": ["行ける", "いける"],
           "て形": ["行って", "いって"],
@@ -161,16 +282,6 @@
           "ない形": ["飲まない", "のまない"],
           "た形": ["飲んだ", "のんだ"],
           "意向形": ["飲もう", "のもう"]
-        }
-      },
-      {
-        word: "泳ぐ", reading: "およぐ", meaning: "游泳", group: 1,
-        forms: {
-          "可能形": ["泳げる", "およげる"],
-          "て形": ["泳いで", "およいで"],
-          "ない形": ["泳がない", "およがない"],
-          "た形": ["泳いだ", "およいだ"],
-          "意向形": ["泳ごう", "およごう"]
         }
       },
       {
@@ -203,79 +314,8 @@
           "意向形": ["買おう", "かおう"]
         }
       },
-      {
-        word: "遊ぶ", reading: "あそぶ", meaning: "玩耍", group: 1,
-        forms: {
-          "可能形": ["遊べる", "あそべる"],
-          "て形": ["遊んで", "あそんで"],
-          "ない形": ["遊ばない", "あそばない"],
-          "た形": ["遊んだ", "あそんだ"],
-          "意向形": ["遊ぼう", "あそぼう"]
-        }
-      },
-      {
-        word: "死ぬ", reading: "しぬ", meaning: "死", group: 1,
-        forms: {
-          "可能形": ["死ねる", "しねる"],
-          "て形": ["死んで", "しんで"],
-          "ない形": ["死なない", "しなない"],
-          "た形": ["死んだ", "しんだ"],
-          "意向形": ["死のう", "しのう"]
-        }
-      },
-      {
-        word: "急ぐ", reading: "いそぐ", meaning: "趕急", group: 1,
-        forms: {
-          "可能形": ["急げる", "いそげる"],
-          "て形": ["急いで", "いそいで"],
-          "ない形": ["急がない", "いそばない"],
-          "た形": ["急いだ", "いそいだ"],
-          "意向形": ["急ごう", "いそごう"]
-        }
-      },
-      // 例外一類動詞（外觀像二類，實為一類）
-      {
-        word: "帰る", reading: "かえる", meaning: "回家（例外1類）", group: 1,
-        forms: {
-          "可能形": ["帰れる", "かえれる"],
-          "て形": ["帰って", "かえって"],
-          "ない形": ["帰らない", "かえらない"],
-          "た形": ["帰った", "かえった"],
-          "意向形": ["帰ろう", "かえろう"]
-        }
-      },
-      {
-        word: "知る", reading: "しる", meaning: "知道（例外1類）", group: 1,
-        forms: {
-          "可能形": ["知れる", "しれる"],
-          "て形": ["知って", "しって"],
-          "ない形": ["知らない", "しらない"],
-          "た形": ["知った", "しった"],
-          "意向形": ["知ろう", "しろう"]
-        }
-      },
-      {
-        word: "入る", reading: "はいる", meaning: "進入（例外1類）", group: 1,
-        forms: {
-          "可能形": ["入れる", "はいれる"],
-          "て形": ["入って", "はいって"],
-          "ない形": ["入らない", "はいらない"],
-          "た形": ["入った", "はいった"],
-          "意向形": ["入ろう", "はいろう"]
-        }
-      },
-      {
-        word: "走る", reading: "はしる", meaning: "跑（例外1類）", group: 1,
-        forms: {
-          "可能形": ["走れる", "はしれる"],
-          "て形": ["走って", "はしって"],
-          "ない形": ["走らない", "はしらない"],
-          "た形": ["走った", "はしった"],
-          "意向形": ["走ろう", "はしろう"]
-        }
-      },
 
-      // 二類動詞（一段）
+      // ====== 二類動詞（一段） ======
       {
         word: "食べる", reading: "たべる", meaning: "吃", group: 2,
         forms: {
@@ -326,38 +366,8 @@
           "意向形": ["教えよう", "おしえよう"]
         }
       },
-      {
-        word: "開ける", reading: "あける", meaning: "打開", group: 2,
-        forms: {
-          "可能形": ["開けられる", "あけられる", "開けれる", "あけれる"],
-          "て形": ["開けて", "あけて"],
-          "ない形": ["開けない", "あけない"],
-          "た形": ["開けた", "あけた"],
-          "意向形": ["開けよう", "あけよう"]
-        }
-      },
-      {
-        word: "借りる", reading: "かりる", meaning: "借入", group: 2,
-        forms: {
-          "可能形": ["借りられる", "かりられる", "借りれる", "かりれる"],
-          "て形": ["借りて", "かりて"],
-          "ない形": ["借りない", "かりない"],
-          "た形": ["借りた", "かりた"],
-          "意向形": ["借りよう", "かりよう"]
-        }
-      },
-      {
-        word: "忘れる", reading: "わすれる", meaning: "忘記", group: 2,
-        forms: {
-          "可能形": ["忘れられる", "わすれられる", "忘れれる", "わすれれる"],
-          "て形": ["忘れて", "わすれて"],
-          "ない形": ["忘れない", "わすれない"],
-          "た形": ["忘れた", "わすれた"],
-          "意向形": ["忘れよう", "わすれよう"]
-        }
-      },
 
-      // 三類動詞（サ變、カ變）
+      // ====== 三類動詞（變格） ======
       {
         word: "する", reading: "する", meaning: "做（サ變）", group: 3,
         forms: {
@@ -376,16 +386,6 @@
           "ない形": ["こない", "来ない"],
           "た形": ["きた", "来た"],
           "意向形": ["こよう", "来よう"]
-        }
-      },
-      {
-        word: "勉強する", reading: "べんきょうする", meaning: "學習（サ變）", group: 3,
-        forms: {
-          "可能形": ["勉強できる", "べんきょうできる"],
-          "て形": ["勉強して", "べんきょうして"],
-          "ない形": ["勉強しない", "べんきょうしない"],
-          "た形": ["勉強した", "べんきょうした"],
-          "意向形": ["勉強しよう", "べんきょうしよう"]
         }
       }
     ];
@@ -426,7 +426,6 @@
       const card = document.getElementById("mainPracticeCard");
       card.classList.remove("anim-shake", "anim-success");
 
-      // 強制觸發重繪以重播動畫
       void card.offsetWidth;
 
       if (type === "success") {
@@ -488,7 +487,7 @@
         document.getElementById("stepConjugation").classList.remove("hidden");
         document.getElementById("conjugationInput").focus();
       } else {
-        showFeedback(false, `分類錯誤！這是 ${currentVerb.group} 類動詞。已記錄到錯題本！`);
+        showFeedback(false, `分類錯誤！這是 ${currentVerb.group} 類動詞（特例）。已記錄到錯題本！`);
         recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 ${currentVerb.group} 類動詞`, targetForm);
         document.getElementById("nextBtn").classList.remove("hidden");
         document.getElementById("nextBtn").focus();
