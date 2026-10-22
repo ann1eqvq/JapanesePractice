@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日文動詞變化特訓</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #F8F9FA;
+      color: #333333;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .custom-primary {
+      background-color: #47607D;
+    }
+    .custom-primary:hover {
+      background-color: #384C63;
+    }
+    .text-brand {
+      color: #47607D;
+    }
+    .border-brand {
+      border-color: #47607D;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+  <!-- 主練習區塊 -->
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-6">
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-2">
+        <h1 class="text-xl font-bold text-gray-800">日文動詞變化特訓</h1>
+        <span id="reviewModeBadge" class="hidden text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">錯題重練模式</span>
+      </div>
+      <div class="text-sm text-gray-500">
+        答對：<span id="score" class="font-bold text-brand">0</span>
+      </div>
+    </div>
+
+    <!-- 單字展示卡 -->
+    <div class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100">
+      <div id="wordDisplay" class="text-3xl font-extrabold text-gray-800 mb-1">食べる</div>
+      <div id="readingDisplay" class="text-sm text-gray-500 mb-1">たべる</div>
+      <div id="meaningDisplay" class="text-xs text-gray-400">吃</div>
+    </div>
+
+    <!-- 步驟一：選擇類別 -->
+    <div id="stepGroup" class="mb-4">
+      <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（可按快捷鍵 1 / 2 / 3）</p>
+      <div class="grid grid-cols-3 gap-3">
+        <button onclick="handleGroupSelect(1)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">1類動詞 (1)</button>
+        <button onclick="handleGroupSelect(2)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">2類動詞 (2)</button>
+        <button onclick="handleGroupSelect(3)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">3類動詞 (3)</button>
+      </div>
+    </div>
+
+    <!-- 步驟二：輸入變形 -->
+    <div id="stepConjugation" class="hidden mb-4">
+      <p class="text-sm font-medium text-gray-700 mb-2">
+        步驟 2：請輸入該動詞的 <span id="targetFormLabel" class="font-bold text-brand">可能形</span>
+      </p>
+      <form onsubmit="handleConjugationSubmit(event)" class="flex gap-2">
+        <input 
+          id="conjugationInput" 
+          type="text" 
+          placeholder="輸入平假名或漢字（例：食べられる / たべられる）" 
+          class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-sm"
+          autocomplete="off"
+        >
+        <button type="submit" class="custom-primary text-white px-5 py-2.5 rounded-xl text-sm font-medium transition">送出</button>
+      </form>
+    </div>
+
+    <!-- 反饋訊息 -->
+    <div id="feedback" class="text-sm font-medium min-h-[24px] mb-4 text-center"></div>
+
+    <button id="nextBtn" onclick="nextQuestion()" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition">
+      下一題 (Enter)
+    </button>
+  </div>
+
+  <!-- 錯題記錄卡 -->
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center gap-2">
+        <h2 class="text-base font-bold text-gray-800">錯題記錄清單</h2>
+        <span id="mistakeCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">0 題</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="retryMistakesBtn" onclick="toggleMistakeMode()" class="text-xs px-3 py-1 rounded-lg border border-brand text-brand hover:bg-gray-50 transition hidden">
+          只練錯題
+        </button>
+        <button onclick="clearMistakes()" class="text-xs text-gray-400 hover:text-rose-500 transition">
+          清空本機紀錄
+        </button>
+      </div>
+    </div>
+
+    <div id="mistakeList" class="space-y-3 text-sm">
+      <div id="emptyNote" class="text-center text-gray-400 py-6">目前尚無答錯題目，繼續保持！</div>
+    </div>
+  </div>
+
+  <script>
+    // 題庫資料
+    const verbs = [
+      {
+        word: "食べる", reading: "たべる", meaning: "吃", group: 2,
+        forms: {
+          "可能形": ["食べられる", "たべられる", "食べれる", "たべれる"],
+          "て形": ["食べて", "たべて"],
+          "ない形": ["食べない", "たべない"],
+          "た形": ["食べた", "たべた"],
+          "意向形": ["食べよう", "たべよう"]
+        }
+      },
+      {
+        word: "行く", reading: "いく", meaning: "去", group: 1,
+        forms: {
+          "可能形": ["行ける", "いける"],
+          "て形": ["行って", "いって"],
+          "ない形": ["行かない", "いかない"],
+          "た形": ["行った", "いった"],
+          "意向形": ["行こう", "いこう"]
+        }
+      },
+      {
+        word: "飲む", reading: "のむ", meaning: "喝", group: 1,
+        forms: {
+          "可能形": ["飲める", "のめる"],
+          "て形": ["飲んで", "のんで"],
+          "ない形": ["飲まない", "のまない"],
+          "た形": ["飲んだ", "のんだ"],
+          "意向形": ["飲もう", "のもう"]
+        }
+      },
+      {
+        word: "見る", reading: "みる", meaning: "看", group: 2,
+        forms: {
+          "可能形": ["見られる", "みられる", "見れる", "みれる"],
+          "て形": ["見て", "みて"],
+          "ない形": ["見ない", "みない"],
+          "た形": ["見た", "みた"],
+          "意向形": ["見よう", "みよう"]
+        }
+      },
+      {
+        word: "する", reading: "する", meaning: "做", group: 3,
+        forms: {
+          "可能形": ["できる"],
+          "て形": ["して"],
+          "ない形": ["しない"],
+          "た形": ["した"],
+          "意向形": ["しよう"]
+        }
+      },
+      {
+        word: "来る", reading: "くる", meaning: "來", group: 3,
+        forms: {
+          "可能形": ["こられる", "来られる", "これる", "来れる"],
+          "て形": ["きて", "来て"],
+          "ない形": ["こない", "来ない"],
+          "た形": ["きた", "来た"],
+          "意向形": ["こよう", "来よう"]
+        }
+      },
+      {
+        word: "話す", reading: "はなす", meaning: "說話", group: 1,
+        forms: {
+          "可能形": ["話せる", "はなせる"],
+          "て形": ["話して", "はなして"],
+          "ない形": ["話さない", "はなさない"],
+          "た形": ["話した", "はなした"],
+          "意向形": ["話そう", "はなそう"]
+        }
+      },
+      {
+        word: "待つ", reading: "まつ", meaning: "等待", group: 1,
+        forms: {
+          "可能形": ["待てる", "まてる"],
+          "て形": ["待って", "まって"],
+          "ない形": ["待たない", "またない"],
+          "た形": ["待った", "まった"],
+          "意向形": ["待とう", "まとう"]
+        }
+      }
+    ];
+
+    const STORAGE_KEY = "jp_verb_practice_mistakes";
+
+    let currentVerb = null;
+    let targetForm = "";
+    let score = 0;
+    let isMistakeMode = false;
+    let mistakes = [];
+
+    // 初始化：從 localStorage 載入資料
+    function initApp() {
+      loadMistakesFromStorage();
+      renderMistakes();
+      nextQuestion();
+      setupKeyboardShortcuts();
+    }
+
+    function loadMistakesFromStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        mistakes = saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        console.error("無法讀取本機快取:", e);
+        mistakes = [];
+      }
+    }
+
+    function saveMistakesToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mistakes));
+      } catch (e) {
+        console.error("無法寫入本機快取:", e);
+      }
+    }
+
+    function nextQuestion() {
+      if (isMistakeMode && mistakes.length > 0) {
+        const randomMistake = mistakes[Math.floor(Math.random() * mistakes.length)];
+        currentVerb = verbs.find(v => v.word === randomMistake.word) || verbs[0];
+        targetForm = randomMistake.formKey || Object.keys(currentVerb.forms)[0];
+      } else {
+        if (isMistakeMode && mistakes.length === 0) {
+          toggleMistakeMode();
+        }
+        currentVerb = verbs[Math.floor(Math.random() * verbs.length)];
+        const formKeys = Object.keys(currentVerb.forms);
+        targetForm = formKeys[Math.floor(Math.random() * formKeys.length)];
+      }
+
+      document.getElementById("wordDisplay").textContent = currentVerb.word;
+      document.getElementById("readingDisplay").textContent = currentVerb.reading;
+      document.getElementById("meaningDisplay").textContent = currentVerb.meaning;
+      document.getElementById("targetFormLabel").textContent = targetForm;
+
+      document.getElementById("stepGroup").classList.remove("hidden");
+      document.getElementById("stepConjugation").classList.add("hidden");
+      document.getElementById("nextBtn").classList.add("hidden");
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("conjugationInput").value = "";
+    }
+
+    function handleGroupSelect(selectedGroup) {
+      const feedback = document.getElementById("feedback");
+      if (selectedGroup === currentVerb.group) {
+        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-emerald-600";
+        feedback.textContent = "分類正確！請接著輸入指定形態。";
+        document.getElementById("stepGroup").classList.add("hidden");
+        document.getElementById("stepConjugation").classList.remove("hidden");
+        document.getElementById("conjugationInput").focus();
+      } else {
+        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-rose-500";
+        feedback.textContent = `分類錯誤！這是 ${currentVerb.group} 類動詞。`;
+        recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 ${currentVerb.group} 類動詞`, targetForm);
+        document.getElementById("nextBtn").classList.remove("hidden");
+      }
+    }
+
+    function handleConjugationSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById("conjugationInput").value.trim();
+      const validAnswers = currentVerb.forms[targetForm] || [];
+      const feedback = document.getElementById("feedback");
+
+      if (validAnswers.includes(input)) {
+        score++;
+        document.getElementById("score").textContent = score;
+        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-emerald-600";
+        feedback.textContent = "回答正確！";
+      } else {
+        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-rose-500";
+        feedback.textContent = `輸入錯誤！正確答案是：${validAnswers[0] || "無"}`;
+        recordMistake(`${targetForm} 變換錯誤`, input || "（未輸入）", validAnswers[0] || "", targetForm);
+      }
+
+      document.getElementById("stepConjugation").classList.add("hidden");
+      document.getElementById("nextBtn").classList.remove("hidden");
+      document.getElementById("nextBtn").focus();
+    }
+
+    function recordMistake(type, userAns, correctAns, formKey) {
+      const existsIndex = mistakes.findIndex(m => m.word === currentVerb.word && m.type === type);
+      if (existsIndex !== -1) {
+        mistakes.splice(existsIndex, 1);
+      }
+
+      mistakes.unshift({
+        id: Date.now(),
+        word: currentVerb.word,
+        reading: currentVerb.reading,
+        meaning: currentVerb.meaning,
+        type: type,
+        formKey: formKey,
+        userAns: userAns,
+        correctAns: correctAns,
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveMistakesToStorage();
+      renderMistakes();
+    }
+
+    function removeSingleMistake(id) {
+      mistakes = mistakes.filter(m => m.id !== id);
+      saveMistakesToStorage();
+      renderMistakes();
+      if (isMistakeMode && mistakes.length === 0) {
+        toggleMistakeMode();
+      }
+    }
+
+    function renderMistakes() {
+      const list = document.getElementById("mistakeList");
+      const retryBtn = document.getElementById("retryMistakesBtn");
+      const badge = document.getElementById("mistakeCountBadge");
+
+      badge.textContent = `${mistakes.length} 題`;
+
+      if (mistakes.length === 0) {
+        list.innerHTML = `<div id="emptyNote" class="text-center text-gray-400 py-6">目前尚無答錯題目，繼續保持！</div>`;
+        retryBtn.classList.add("hidden");
+        return;
+      }
+
+      retryBtn.classList.remove("hidden");
+      list.innerHTML = mistakes.map(m => `
+        <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-1.5">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-gray-800">${m.word}</span>
+              <span class="text-xs text-gray-400">(${m.reading})</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-medium">${m.type}</span>
+              <button onclick="removeSingleMistake(${m.id})" class="text-gray-300 hover:text-gray-500 text-xs px-1">✕</button>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 flex items-center gap-2">
+            <span>你的回答：<span class="line-through text-rose-500">${m.userAns}</span></span>
+            <span class="text-gray-300">|</span>
+            <span>正確答案：<span class="font-medium text-emerald-600">${m.correctAns}</span></span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function clearMistakes() {
+      if (confirm("確定要清除所有保存在瀏覽器裡的錯題紀錄嗎？")) {
+        mistakes = [];
+        saveMistakesToStorage();
+        renderMistakes();
+        if (isMistakeMode) toggleMistakeMode();
+      }
+    }
+
+    function toggleMistakeMode() {
+      if (!isMistakeMode && mistakes.length === 0) {
+        alert("目前沒有錯題紀錄！");
+        return;
+      }
+      isMistakeMode = !isMistakeMode;
+      const retryBtn = document.getElementById("retryMistakesBtn");
+      const modeBadge = document.getElementById("reviewModeBadge");
+
+      if (isMistakeMode) {
+        retryBtn.textContent = "退出錯題練習";
+        retryBtn.className = "text-xs px-3 py-1 rounded-lg bg-amber-500 text-white font-medium transition";
+        modeBadge.classList.remove("hidden");
+      } else {
+        retryBtn.textContent = "只練錯題";
+        retryBtn.className = "text-xs px-3 py-1 rounded-lg border border-brand text-brand hover:bg-gray-50 transition";
+        modeBadge.classList.add("hidden");
+      }
+      nextQuestion();
+    }
+
+    function setupKeyboardShortcuts() {
+      window.addEventListener("keydown", (e) => {
+        const stepGroup = document.getElementById("stepGroup");
+        const nextBtn = document.getElementById("nextBtn");
+
+        // 第一步快捷鍵 1, 2, 3
+        if (!stepGroup.classList.contains("hidden")) {
+          if (e.key === "1") handleGroupSelect(1);
+          if (e.key === "2") handleGroupSelect(2);
+          if (e.key === "3") handleGroupSelect(3);
+        }
+
+        // 下一題快捷鍵 Enter
+        if (!nextBtn.classList.contains("hidden") && e.key === "Enter") {
+          e.preventDefault();
+          nextQuestion();
+        }
+      });
+    }
+
+    // 啟動應用
+    initApp();
+  </script>
+</body>
+</html>
