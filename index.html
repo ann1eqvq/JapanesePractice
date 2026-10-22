@@ -2,7 +2,8 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 加入 maximum-scale 與 user-scalable 防止手機聚焦時縮放跑版 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>日文動詞變化</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入 Chart.js 用於繪製圓餅圖 -->
@@ -24,6 +25,16 @@
     }
     .border-brand {
       border-color: #47607D;
+    }
+
+    /* 防止手機瀏覽器（如 iOS Safari）在輸入框聚焦時自動放大畫面 */
+    input[type="text"], input {
+      font-size: 16px !important;
+    }
+    @media (min-width: 640px) {
+      input[type="text"], input {
+        font-size: 0.875rem !important; /* 電腦平板端維持 14px */
+      }
     }
 
     /* 答錯時的左右搖晃動畫 */
@@ -80,7 +91,7 @@
         </div>
       </div>
 
-      <!-- 題目單字卡（未答題前不顯示任何分類提示） -->
+      <!-- 題目單字卡 -->
       <div id="wordDisplayCard" class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100 transition-all duration-200">
         <div id="wordDisplay" class="text-3xl font-extrabold text-gray-800 mb-1">食べる</div>
         <div id="readingDisplay" class="text-sm text-gray-500 mb-1">たべる</div>
@@ -107,7 +118,7 @@
             id="conjugationInput" 
             type="text" 
             placeholder="支援漢字或平假名輸入" 
-            class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-sm"
+            class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-base sm:text-sm"
             autocomplete="off"
           >
           <button type="submit" class="custom-primary text-white px-5 py-2.5 rounded-xl text-sm font-medium transition">送出</button>
@@ -332,12 +343,12 @@
         word: "経る", reading: "へる", meaning: "經歷、度過", group: 1, subType: "1類動詞", isException: true,
         forms: {
           "可能形": ["経れる", "へれる"],
-          "て形": ["経って", "へって"],
-          "ない形": ["経らない", "へらない"],
-          "た形": ["経った", "へった"],
-          "意向形": ["経ろう", "へろう"],
-          "連體形": ["経る", "へる"],
-          "ます形": ["経ります", "へります"],
+          "て形": ["經って", "へって"],
+          "ない形": ["經らない", "へらない"],
+          "た形": ["經った", "へった"],
+          "意向形": ["經ろう", "へろう"],
+          "連體形": ["經る", "へる"],
+          "ます形": ["經ります", "へります"],
           "假定形": ["經れば", "へれば"],
           "命令形": ["經れ", "へれ"]
         }
@@ -492,12 +503,12 @@
           "可能形": ["寝られる", "ねられる", "寝れる", "ねれる"],
           "て形": ["寝て", "ねて"],
           "ない形": ["寝ない", "ねない"],
-          "た形": ["寝た", "ねた"],
-          "意向形": ["寝よう", "ねよう"],
-          "連體形": ["寝る", "ねる"],
-          "ます形": ["寝ます", "ねます"],
-          "假定形": ["寝れば", "ねれば"],
-          "命令形": ["寝ろ", "ねろ", "寢よ", "ねよ"]
+          "た形": ["寢た", "ねた"],
+          "意向形": ["寢よう", "ねよう"],
+          "連體形": ["寢る", "ねる"],
+          "ます形": ["寢ます", "ねます"],
+          "假定形": ["寢れば", "ねれば"],
+          "命令形": ["寢ろ", "ねろ", "寢よ", "ねよ"]
         }
       },
       {
@@ -515,7 +526,7 @@
         }
       },
 
-      // ====== 三類動詞（カ變、サ變：題目顯示不提前劇透） ======
+      // ====== 三類動詞 ======
       {
         word: "する", reading: "する", meaning: "做", group: 3, subType: "サ變",
         forms: {
@@ -882,10 +893,7 @@
       noChart.classList.add("hidden");
       chartCanvas.classList.remove("hidden");
 
-      // 1. 動詞類型統計（圓餅圖：全統一為 カ變、サ變）
       const typeCounts = { "1類動詞": 0, "2類動詞": 0, "カ變": 0, "サ變": 0 };
-      
-      // 2. 單字維度分組統計
       const wordStats = {};
 
       mistakes.forEach(m => {
