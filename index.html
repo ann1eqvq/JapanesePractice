@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日文動詞變化練習特訓</title>
+  <title>日文動詞變化特訓</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -23,12 +23,38 @@
     .border-brand {
       border-color: #47607D;
     }
+
+    /* 答錯時的左右搖晃動畫 */
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      15%, 45%, 75% { transform: translateX(-7px); }
+      30%, 60%, 90% { transform: translateX(7px); }
+    }
+
+    /* 答對時的彈跳與放大動畫 */
+    @keyframes popSuccess {
+      0% { transform: scale(0.92); opacity: 0.6; }
+      50% { transform: scale(1.04); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .anim-shake {
+      animation: shakeCard 0.45s ease-in-out;
+      border-color: #F43F5E !important;
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+    }
+
+    .anim-success {
+      animation: popSuccess 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border-color: #10B981 !important;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
 
-  <!-- 主卡片 -->
-  <div class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-6">
+  <!-- 主練習卡片 -->
+  <div id="mainPracticeCard" class="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-6 transition-all duration-300">
     <div class="flex justify-between items-center mb-6">
       <div class="flex items-center gap-2">
         <h1 class="text-xl font-bold text-gray-800">日文動詞變化特訓</h1>
@@ -40,7 +66,7 @@
     </div>
 
     <!-- 題目單字卡 -->
-    <div class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100">
+    <div id="wordDisplayCard" class="text-center py-6 bg-gray-50 rounded-xl mb-6 border border-gray-100 transition-all duration-200">
       <div id="wordDisplay" class="text-3xl font-extrabold text-gray-800 mb-1">食べる</div>
       <div id="readingDisplay" class="text-sm text-gray-500 mb-1">たべる</div>
       <div id="meaningDisplay" class="text-xs text-gray-400">吃</div>
@@ -48,7 +74,7 @@
 
     <!-- 步驟 1：選擇類別 -->
     <div id="stepGroup" class="mb-4">
-      <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（鍵盤快速鍵 1 / 2 / 3）</p>
+      <p class="text-sm font-medium text-gray-700 mb-3">步驟 1：請選擇動詞類別（可按快捷鍵 1 / 2 / 3）</p>
       <div class="grid grid-cols-3 gap-3">
         <button onclick="handleGroupSelect(1)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">1類動詞 (1)</button>
         <button onclick="handleGroupSelect(2)" class="py-2.5 px-4 rounded-xl border border-gray-200 hover:border-brand hover:bg-gray-50 font-medium text-sm transition">2類動詞 (2)</button>
@@ -65,7 +91,7 @@
         <input 
           id="conjugationInput" 
           type="text" 
-          placeholder="支援漢字或平假名輸入（例：食べられる / たべられる）" 
+          placeholder="支援漢字或平假名（例：食べられる / たべられる）" 
           class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand text-sm"
           autocomplete="off"
         >
@@ -73,8 +99,8 @@
       </form>
     </div>
 
-    <!-- 狀態回饋 -->
-    <div id="feedback" class="text-sm font-medium min-h-[24px] mb-4 text-center"></div>
+    <!-- 醒目反饋橫幅 -->
+    <div id="feedbackBox" class="hidden rounded-xl p-3 mb-4 text-center text-sm font-semibold transition-all"></div>
 
     <button id="nextBtn" onclick="nextQuestion()" class="hidden w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition">
       下一題 (Enter)
@@ -93,7 +119,7 @@
           只練錯題
         </button>
         <button onclick="clearMistakes()" class="text-xs text-gray-400 hover:text-rose-500 transition">
-          清空所有紀錄
+          清空本機紀錄
         </button>
       </div>
     </div>
@@ -104,20 +130,21 @@
   </div>
 
   <script>
-    // 擴充題庫
+    // 擴充題庫：涵蓋一類五段、特殊音便、例外五段、二類一段及三類變格動詞
     const verbs = [
+      // 一類動詞（五段）
       {
-        word: "食べる", reading: "たべる", meaning: "吃", group: 2,
+        word: "書く", reading: "かく", meaning: "寫", group: 1,
         forms: {
-          "可能形": ["食べられる", "たべられる", "食べれる", "たべれる"],
-          "て形": ["食べて", "たべて"],
-          "ない形": ["食べない", "たべない"],
-          "た形": ["食べた", "たべた"],
-          "意向形": ["食べよう", "たべよう"]
+          "可能形": ["書ける", "かける"],
+          "て形": ["書いて", "かいて"],
+          "ない形": ["書かない", "かかない"],
+          "た形": ["書いた", "かいた"],
+          "意向形": ["書こう", "かこう"]
         }
       },
       {
-        word: "行く", reading: "いく", meaning: "去", group: 1,
+        word: "行く", reading: "いく", meaning: "去（促音便特殊變化）", group: 1,
         forms: {
           "可能形": ["行ける", "いける"],
           "て形": ["行って", "いって"],
@@ -137,33 +164,13 @@
         }
       },
       {
-        word: "見る", reading: "みる", meaning: "看", group: 2,
+        word: "泳ぐ", reading: "およぐ", meaning: "游泳", group: 1,
         forms: {
-          "可能形": ["見られる", "みられる", "見れる", "みれる"],
-          "て形": ["見て", "みて"],
-          "ない形": ["見ない", "みない"],
-          "た形": ["見た", "みた"],
-          "意向形": ["見よう", "みよう"]
-        }
-      },
-      {
-        word: "する", reading: "する", meaning: "做", group: 3,
-        forms: {
-          "可能形": ["できる"],
-          "て形": ["して"],
-          "ない形": ["しない"],
-          "た形": ["した"],
-          "意向形": ["しよう"]
-        }
-      },
-      {
-        word: "来る", reading: "くる", meaning: "來", group: 3,
-        forms: {
-          "可能形": ["こられる", "来られる", "これる", "来れる"],
-          "て形": ["きて", "来て"],
-          "ない形": ["こない", "来ない"],
-          "た形": ["きた", "来た"],
-          "意向形": ["こよう", "来よう"]
+          "可能形": ["泳げる", "およげる"],
+          "て形": ["泳いで", "およいで"],
+          "ない形": ["泳がない", "およがない"],
+          "た形": ["泳いだ", "およいだ"],
+          "意向形": ["泳ごう", "およごう"]
         }
       },
       {
@@ -187,6 +194,109 @@
         }
       },
       {
+        word: "買う", reading: "かう", meaning: "買", group: 1,
+        forms: {
+          "可能形": ["買える", "かえる"],
+          "て形": ["買って", "かって"],
+          "ない形": ["買わない", "かわない"],
+          "た形": ["買った", "かった"],
+          "意向形": ["買おう", "かおう"]
+        }
+      },
+      {
+        word: "遊ぶ", reading: "あそぶ", meaning: "玩耍", group: 1,
+        forms: {
+          "可能形": ["遊べる", "あそべる"],
+          "て形": ["遊んで", "あそんで"],
+          "ない形": ["遊ばない", "あそばない"],
+          "た形": ["遊んだ", "あそんだ"],
+          "意向形": ["遊ぼう", "あそぼう"]
+        }
+      },
+      {
+        word: "死ぬ", reading: "しぬ", meaning: "死", group: 1,
+        forms: {
+          "可能形": ["死ねる", "しねる"],
+          "て形": ["死んで", "しんで"],
+          "ない形": ["死なない", "しなない"],
+          "た形": ["死んだ", "しんだ"],
+          "意向形": ["死のう", "しのう"]
+        }
+      },
+      {
+        word: "急ぐ", reading: "いそぐ", meaning: "趕急", group: 1,
+        forms: {
+          "可能形": ["急げる", "いそげる"],
+          "て形": ["急いで", "いそいで"],
+          "ない形": ["急がない", "いそばない"],
+          "た形": ["急いだ", "いそいだ"],
+          "意向形": ["急ごう", "いそごう"]
+        }
+      },
+      // 例外一類動詞（外觀像二類，實為一類）
+      {
+        word: "帰る", reading: "かえる", meaning: "回家（例外1類）", group: 1,
+        forms: {
+          "可能形": ["帰れる", "かえれる"],
+          "て形": ["帰って", "かえって"],
+          "ない形": ["帰らない", "かえらない"],
+          "た形": ["帰った", "かえった"],
+          "意向形": ["帰ろう", "かえろう"]
+        }
+      },
+      {
+        word: "知る", reading: "しる", meaning: "知道（例外1類）", group: 1,
+        forms: {
+          "可能形": ["知れる", "しれる"],
+          "て形": ["知って", "しって"],
+          "ない形": ["知らない", "しらない"],
+          "た形": ["知った", "しった"],
+          "意向形": ["知ろう", "しろう"]
+        }
+      },
+      {
+        word: "入る", reading: "はいる", meaning: "進入（例外1類）", group: 1,
+        forms: {
+          "可能形": ["入れる", "はいれる"],
+          "て形": ["入って", "はいって"],
+          "ない形": ["入らない", "はいらない"],
+          "た形": ["入った", "はいった"],
+          "意向形": ["入ろう", "はいろう"]
+        }
+      },
+      {
+        word: "走る", reading: "はしる", meaning: "跑（例外1類）", group: 1,
+        forms: {
+          "可能形": ["走れる", "はしれる"],
+          "て形": ["走って", "はしって"],
+          "ない形": ["走らない", "はしらない"],
+          "た形": ["走った", "はしった"],
+          "意向形": ["走ろう", "はしろう"]
+        }
+      },
+
+      // 二類動詞（一段）
+      {
+        word: "食べる", reading: "たべる", meaning: "吃", group: 2,
+        forms: {
+          "可能形": ["食べられる", "たべられる", "食べれる", "たべれる"],
+          "て形": ["食べて", "たべて"],
+          "ない形": ["食べない", "たべない"],
+          "た形": ["食べた", "たべた"],
+          "意向形": ["食べよう", "たべよう"]
+        }
+      },
+      {
+        word: "見る", reading: "みる", meaning: "看", group: 2,
+        forms: {
+          "可能形": ["見られる", "みられる", "見れる", "みれる"],
+          "て形": ["見て", "みて"],
+          "ない形": ["見ない", "みない"],
+          "た形": ["見た", "みた"],
+          "意向形": ["見よう", "みよう"]
+        }
+      },
+      {
         word: "起きる", reading: "おきる", meaning: "起床", group: 2,
         forms: {
           "可能形": ["起きられる", "おきられる", "起きれる", "おきれる"],
@@ -197,13 +307,85 @@
         }
       },
       {
-        word: "買う", reading: "かう", meaning: "買", group: 1,
+        word: "寝る", reading: "ねる", meaning: "睡覺", group: 2,
         forms: {
-          "可能形": ["買える", "かえる"],
-          "て形": ["買って", "かって"],
-          "ない形": ["買わない", "かわない"],
-          "た形": ["買った", "かった"],
-          "意向形": ["買おう", "かおう"]
+          "可能形": ["寝られる", "ねられる", "寝れる", "ねれる"],
+          "て形": ["寝て", "ねて"],
+          "ない形": ["寝ない", "ねない"],
+          "た形": ["寝た", "ねた"],
+          "意向形": ["寝よう", "ねよう"]
+        }
+      },
+      {
+        word: "教える", reading: "おしえる", meaning: "教導", group: 2,
+        forms: {
+          "可能形": ["教えられる", "おしえられる", "教えれる", "おしえれる"],
+          "て形": ["教えて", "おしえて"],
+          "ない形": ["教えない", "おしえない"],
+          "た形": ["教えた", "おしえた"],
+          "意向形": ["教えよう", "おしえよう"]
+        }
+      },
+      {
+        word: "開ける", reading: "あける", meaning: "打開", group: 2,
+        forms: {
+          "可能形": ["開けられる", "あけられる", "開けれる", "あけれる"],
+          "て形": ["開けて", "あけて"],
+          "ない形": ["開けない", "あけない"],
+          "た形": ["開けた", "あけた"],
+          "意向形": ["開けよう", "あけよう"]
+        }
+      },
+      {
+        word: "借りる", reading: "かりる", meaning: "借入", group: 2,
+        forms: {
+          "可能形": ["借りられる", "かりられる", "借りれる", "かりれる"],
+          "て形": ["借りて", "かりて"],
+          "ない形": ["借りない", "かりない"],
+          "た形": ["借りた", "かりた"],
+          "意向形": ["借りよう", "かりよう"]
+        }
+      },
+      {
+        word: "忘れる", reading: "わすれる", meaning: "忘記", group: 2,
+        forms: {
+          "可能形": ["忘れられる", "わすれられる", "忘れれる", "わすれれる"],
+          "て形": ["忘れて", "わすれて"],
+          "ない形": ["忘れない", "わすれない"],
+          "た形": ["忘れた", "わすれた"],
+          "意向形": ["忘れよう", "わすれよう"]
+        }
+      },
+
+      // 三類動詞（サ變、カ變）
+      {
+        word: "する", reading: "する", meaning: "做（サ變）", group: 3,
+        forms: {
+          "可能形": ["できる"],
+          "て形": ["して"],
+          "ない形": ["しない"],
+          "た形": ["した"],
+          "意向形": ["しよう"]
+        }
+      },
+      {
+        word: "来る", reading: "くる", meaning: "來（カ變）", group: 3,
+        forms: {
+          "可能形": ["こられる", "来られる", "これる", "来れる"],
+          "て形": ["きて", "来て"],
+          "ない形": ["こない", "来ない"],
+          "た形": ["きた", "来た"],
+          "意向形": ["こよう", "来よう"]
+        }
+      },
+      {
+        word: "勉強する", reading: "べんきょうする", meaning: "學習（サ變）", group: 3,
+        forms: {
+          "可能形": ["勉強できる", "べんきょうできる"],
+          "て形": ["勉強して", "べんきょうして"],
+          "ない形": ["勉強しない", "べんきょうしない"],
+          "た形": ["勉強した", "べんきょうした"],
+          "意向形": ["勉強しよう", "べんきょうしよう"]
         }
       }
     ];
@@ -216,7 +398,6 @@
     let isMistakeMode = false;
     let mistakes = [];
 
-    // 初始化載入
     function initApp() {
       loadMistakes();
       renderMistakes();
@@ -238,6 +419,39 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mistakes));
       } catch (e) {
         console.error("無法寫入 localStorage", e);
+      }
+    }
+
+    function triggerAnimation(type) {
+      const card = document.getElementById("mainPracticeCard");
+      card.classList.remove("anim-shake", "anim-success");
+
+      // 強制觸發重繪以重播動畫
+      void card.offsetWidth;
+
+      if (type === "success") {
+        card.classList.add("anim-success");
+      } else {
+        card.classList.add("anim-shake");
+      }
+
+      setTimeout(() => {
+        card.classList.remove("anim-shake", "anim-success");
+      }, 600);
+    }
+
+    function showFeedback(isSuccess, message) {
+      const box = document.getElementById("feedbackBox");
+      box.classList.remove("hidden");
+
+      if (isSuccess) {
+        box.className = "rounded-xl p-3 mb-4 text-center text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition-all";
+        box.innerHTML = `✨ ${message}`;
+        triggerAnimation("success");
+      } else {
+        box.className = "rounded-xl p-3 mb-4 text-center text-sm font-semibold bg-rose-50 text-rose-700 border border-rose-200 transition-all";
+        box.innerHTML = `⚠️ ${message}`;
+        triggerAnimation("error");
       }
     }
 
@@ -263,21 +477,18 @@
       document.getElementById("stepGroup").classList.remove("hidden");
       document.getElementById("stepConjugation").classList.add("hidden");
       document.getElementById("nextBtn").classList.add("hidden");
-      document.getElementById("feedback").textContent = "";
+      document.getElementById("feedbackBox").classList.add("hidden");
       document.getElementById("conjugationInput").value = "";
     }
 
     function handleGroupSelect(selectedGroup) {
-      const feedback = document.getElementById("feedback");
       if (selectedGroup === currentVerb.group) {
-        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-emerald-600";
-        feedback.textContent = "分類正確！請接著輸入指定形態。";
+        showFeedback(true, "分類正確！請接著輸入指定形態。");
         document.getElementById("stepGroup").classList.add("hidden");
         document.getElementById("stepConjugation").classList.remove("hidden");
         document.getElementById("conjugationInput").focus();
       } else {
-        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-rose-500";
-        feedback.textContent = `分類錯誤！這是 ${currentVerb.group} 類動詞。`;
+        showFeedback(false, `分類錯誤！這是 ${currentVerb.group} 類動詞。已記錄到錯題本！`);
         recordMistake("分類錯誤", `選了 ${selectedGroup} 類動詞`, `正確為 ${currentVerb.group} 類動詞`, targetForm);
         document.getElementById("nextBtn").classList.remove("hidden");
         document.getElementById("nextBtn").focus();
@@ -288,23 +499,19 @@
       e.preventDefault();
       const input = document.getElementById("conjugationInput").value.trim();
       const validAnswers = currentVerb.forms[targetForm] || [];
-      const feedback = document.getElementById("feedback");
 
       if (validAnswers.includes(input)) {
         score++;
         document.getElementById("score").textContent = score;
-        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-emerald-600";
-        feedback.textContent = "回答正確！太棒了！";
+        showFeedback(true, "變化完全正確！太厲害了！");
 
-        // 若在錯題模式中答對，自動解除該項錯題
         if (isMistakeMode) {
           mistakes = mistakes.filter(m => !(m.word === currentVerb.word && m.formKey === targetForm));
           saveMistakes();
           renderMistakes();
         }
       } else {
-        feedback.className = "text-sm font-medium min-h-[24px] mb-4 text-center text-rose-500";
-        feedback.textContent = `輸入錯誤！正確答案是：${validAnswers[0] || "無"}`;
+        showFeedback(false, `輸入錯誤！正確答案應為：${validAnswers[0] || "無"}`);
         recordMistake(`${targetForm} 變換錯誤`, input || "（空白）", validAnswers[0] || "", targetForm);
       }
 
@@ -314,7 +521,6 @@
     }
 
     function recordMistake(type, userAns, correctAns, formKey) {
-      // 避免重複推入相同字詞及題型的記錄
       mistakes = mistakes.filter(m => !(m.word === currentVerb.word && m.type === type));
 
       mistakes.unshift({
